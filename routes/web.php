@@ -19,7 +19,3 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::apiResource('events', EventController::class);
-
-Route::apiResource('events.attendances', AttendanceController::class)
-->scoped(['attendances'=>'events']);

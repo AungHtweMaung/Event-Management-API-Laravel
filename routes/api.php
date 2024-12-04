@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\EventController;
-use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\Api\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,5 +23,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // events
 Route::apiResource('events', EventController::class);
 
-Route::apiResource('events.attendances', AttendanceController::class)
-->scoped(['attendances'=>'events']);
+Route::apiResource('events.attendances', AttendanceController::class);
+
+// Route::put('attend/update/{attendance}', [AttendanceController::class, "updateAttendance"]);

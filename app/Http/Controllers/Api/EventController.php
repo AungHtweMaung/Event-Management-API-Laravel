@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EventResource;
 use App\Models\Event;
 use Illuminate\Http\Request;
+
 
 class EventController extends Controller
 {
@@ -13,7 +15,14 @@ class EventController extends Controller
      */
     public function index()
     {
-        return Event::all();
+        $query = Event::query(); // model ကို query စရေးမှာမလို့ ခုလိုရေးလိုက်တာ လိုအပ်တဲ့ query တွေ ထပ်ထပ်ပြီး ရေးထည့်သွားလို့ရတယ်
+        $relations = ['user', 'attendances', 'attendances.user'];   // relation ရှိသမျှတွေရေးထားလိုက်တာ
+
+        foreach($relations as $relation) {
+           $query->when($this->shouldIncludeRelation($relation), fn($q) => $q->with($relation));
+        }
+
+        return EventResource::collection($query->paginate());
     }
 
     /**
@@ -37,8 +46,9 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        // return response()->json(['event'=>$event, 'status'=>200]);
-        return $event;
+        // single event ယူတဲ့အချိန် သူနဲ့သက်ဆိုင်တဲ့ relationship data တွေကို တခါတည်းထည့်ပေးလိုက်တာ
+        $event->load(['user', 'attendances']);
+        return new EventResource($event);
     }
 
     /**
@@ -65,9 +75,24 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
-
         $event->delete();
         // It is beeter not to response any body according to the rest api architecture when deleting something.
         return response(status:204);
     }
+
+    // optional relation load ဖို့အတွက် ရေးလိုက်တာ
+    protected function shouldIncludeRelation(string $relation) {
+        // query parameter မှာ include ဆိုတဲ့ key နဲ့ပါရင် ပါတဲ့ တန်ဖိုးယူ။ မပါရင် null ယူ
+        $include = request()->query('include');
+
+        if (!$include) {
+            return false;
+        }
+
+        $relations = array_map('trim', explode(',', $include));
+        // include ထဲမှာပါလာတဲ့ relation တွေကိုပဲ load လုပ်စေချင်လို့
+        return in_array($relation, $relations);
+
+    }
+
 }
